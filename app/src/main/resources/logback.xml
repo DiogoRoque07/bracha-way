@@ -1,0 +1,11 @@
+<configuration>
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <!-- MDC keys: node, tx (src,seq), msg (type) -->
+      <pattern>%d{HH:mm:ss.SSS} [%X{node:-?}] %-5level %logger{20} tx=%X{tx:-} %X{msg:-} - %msg%n</pattern>
+    </encoder>
+  </appender>
+  <root level="INFO">
+    <appender-ref ref="STDOUT"/>
+  </root>
+</configuration>

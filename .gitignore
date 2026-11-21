@@ -1,0 +1,12 @@
+target/
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+data/
+*.keystore
+*.key
+deploy/generated/
+.DS_Store

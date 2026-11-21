@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>tfd.pay</groupId>
+    <artifactId>bracha-way</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>testkit</artifactId>
+  <description>Simulated in-memory network, fault injection and property checkers (used by tests)</description>
+
+  <dependencies>
+    <dependency><groupId>tfd.pay</groupId><artifactId>common</artifactId></dependency>
+    <dependency><groupId>tfd.pay</groupId><artifactId>broadcast</artifactId></dependency>
+    <dependency><groupId>tfd.pay</groupId><artifactId>storage</artifactId></dependency>
+    <dependency><groupId>tfd.pay</groupId><artifactId>app</artifactId></dependency>
+    <dependency><groupId>ch.qos.logback</groupId><artifactId>logback-classic</artifactId><scope>test</scope></dependency>
+  </dependencies>
+
+</project>

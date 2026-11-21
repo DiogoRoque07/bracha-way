@@ -1,0 +1,121 @@
+// Wire contract for bracha-way. FROZEN after Day 0: changes need approval from both other owners.
+syntax = "proto3";
+
+package tfd.pay;
+
+option java_package = "tfd.pay.proto";
+option java_multiple_files = true;
+
+// ---------------------------------------------------------------------------
+// Transfers (signed by the client)
+// ---------------------------------------------------------------------------
+
+// Account IDs (src, dst) are X.509-encoded Ed25519 public keys (PublicKey.getEncoded(), 44 bytes).
+message Transfer {
+  bytes  src    = 1;
+  bytes  dst    = 2;
+  uint64 amount = 3;
+  uint64 seq    = 4;
+}
+
+// `transfer` holds the serialized Transfer EXACTLY as signed. Sign, verify and hash these bytes
+// as they are; never re-serialize.
+message SignedTransfer {
+  bytes transfer  = 1;
+  bytes signature = 2;  // Ed25519 by src over `transfer`
+}
+
+// Wire form of a BRB instance id = (src, seq). Java domain type: tfd.pay.common.model.TxId.
+message TxRef {
+  bytes  src = 1;
+  uint64 seq = 2;
+}
+
+// ---------------------------------------------------------------------------
+// Node <-> node
+// ---------------------------------------------------------------------------
+
+message Send  { TxRef id = 1; SignedTransfer tx = 2; }
+message Echo  { TxRef id = 1; SignedTransfer tx = 2; }
+message Ready { TxRef id = 1; SignedTransfer tx = 2; }
+
+// Unreliable path: sent once, never put in the resend buffer.
+message Heartbeat { uint64 counter = 1; }
+message Ack       { uint64 up_to = 1; }   // cumulative ACK of link_seq
+
+message NodeMessage {
+  oneof body {
+    Send      send      = 1;
+    Echo      echo      = 2;
+    Ready     ready     = 3;
+    Heartbeat heartbeat = 4;
+    Ack       ack       = 5;
+  }
+}
+
+// What actually goes on the wire between nodes (length-delimited).
+message Frame {
+  uint32 sender_id = 1;
+  uint64 epoch     = 2;              // incarnation; increases on every restart
+  uint64 link_seq  = 3;              // 0 for frames on the unreliable path
+  repeated NodeMessage msgs = 4;     // batching: several messages per frame
+  bytes  hmac      = 5;              // HMAC-SHA256 (pair key) over this Frame serialized WITHOUT field 5
+}
+
+// First message on every node-to-node connection.
+message Hello {
+  uint32 sender_id = 1;
+  uint64 epoch     = 2;
+  bytes  hmac      = 3;              // HMAC-SHA256 (pair key) over fields 1..2
+}
+
+// ---------------------------------------------------------------------------
+// Client <-> node
+// ---------------------------------------------------------------------------
+
+message ClientRequest {
+  uint64 request_id = 1;
+  oneof body {
+    SignedTransfer transfer    = 2;
+    TxRef          tx_status   = 3;
+    bytes          next_seq    = 4;  // account id
+    bytes          balance     = 5;  // account id
+    bytes          history     = 6;  // account id
+    bool           node_status = 7;
+  }
+}
+
+enum TransferResult {
+  ACCEPTED        = 0;  // valid signature/format; broadcast in progress
+  ALREADY_APPLIED = 1;  // seq < next[src]
+  REJECTED        = 2;  // bad signature or malformed
+}
+
+enum TxStatus {
+  UNKNOWN = 0;  // not seen/delivered here yet; NOT "failed"
+  PENDING = 1;  // delivered, waiting on earlier seq or on balance
+  APPLIED = 2;
+}
+
+message HistoryReply { repeated SignedTransfer applied = 1; }
+message NodeStatus   { uint32 node_id = 1; repeated uint32 suspected = 2; }
+
+message ClientResponseBody {
+  uint64 request_id = 1;
+  uint32 node_id    = 2;
+  oneof body {
+    TransferResult transfer    = 3;
+    TxStatus       tx_status   = 4;
+    uint64         next_seq    = 5;
+    uint64         balance     = 6;
+    HistoryReply   history     = 7;
+    NodeStatus     node_status = 8;
+    string         error       = 9;
+  }
+}
+
+// `body` is a serialized ClientResponseBody; the node signs those exact bytes with its Ed25519 key.
+message ClientResponse {
+  bytes body           = 1;
+  bytes node_signature = 2;
+}
