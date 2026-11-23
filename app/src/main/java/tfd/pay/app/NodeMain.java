@@ -11,7 +11,7 @@ import java.util.concurrent.Callable;
 /**
  * Node entry point. Owner: C (with B).
  *
- * <p>TODO: load config + node key; build Channel, FailureDetector, Storage, BrbWal, Broadcast, Ledger;
+ * <p>TODO: load config + node key; build Channel, Storage, Broadcast (with BrbWal.NONE), Ledger;
  * single event-loop thread draining a BlockingQueue; signatures verified on receiving threads
  * before enqueueing; client API server (protobuf over TCP, signed responses).
  */

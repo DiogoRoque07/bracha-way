@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.util.stream.Stream;
 
 /**
- * Append-only applied-transfer log on a FileChannel (length-delimited records, force(true)). Owner: C.
+ * Append-only applied-transfer log on a FileChannel (length-delimited records, force(true)). Owner: A.
  */
 public final class FileStorage implements Storage {
     private final Path file;

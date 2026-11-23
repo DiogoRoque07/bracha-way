@@ -11,8 +11,9 @@ import java.util.function.BiConsumer;
  * TCP implementation of {@link Channel}. Owner: A. See docs/PLAN.md §2 (track A).
  *
  * <p>TODO: listener + per-peer connector on virtual threads; Hello handshake (HMAC); Frame with
- * epoch/linkSeq/HMAC; resend buffer + cumulative Ack + dedup; epoch reset; unreliable path for
- * Heartbeat/Ack; batching; resend backoff to suspected peers (never drop).
+ * epoch/linkSeq/HMAC; resend buffer + cumulative Ack + dedup; never drop (no failure detector);
+ * Ack sent once; batching. Epoch is 0 in the base system; reset-on-higher-epoch is part of the
+ * crash-recovery increment.
  */
 public final class TcpChannel implements Channel {
     private final NodeId self;

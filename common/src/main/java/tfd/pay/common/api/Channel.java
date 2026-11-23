@@ -9,9 +9,9 @@ import java.util.function.BiConsumer;
 /**
  * Reliable authenticated point-to-point links between nodes.
  *
- * <p>Send/Echo/Ready go on the reliable path (resent until ACKed, deduplicated, delivered once).
- * Heartbeat/Ack go on the unreliable path (sent once, never resent). The implementation picks the
- * path from the message type.
+ * <p>Send/Echo/Ready go on the reliable path: resent until ACKed, never dropped, deduplicated,
+ * delivered once. Ack is sent once and never resent. The implementation picks the path from the
+ * message type.
  */
 public interface Channel extends AutoCloseable {
 

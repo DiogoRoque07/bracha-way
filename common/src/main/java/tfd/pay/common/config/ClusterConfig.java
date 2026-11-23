@@ -29,7 +29,7 @@ public record ClusterConfig(
     public record GenesisEntry(String account, long balance) {
     }
 
-    public record WalletConfig(int submitFanout, long resendIntervalMs) {
+    public record WalletConfig(int submitFanout, long resendIntervalMs, int maxInFlight) {
     }
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory())
@@ -71,6 +71,8 @@ public record ClusterConfig(
             throw new IllegalArgumentException("expected " + n + " nodes, got " + (nodes == null ? 0 : nodes.size()));
         if (wallet != null && (wallet.submitFanout() < f + 1 || wallet.submitFanout() > n))
             throw new IllegalArgumentException("wallet.submitFanout must be in [f+1, n]");
+        if (wallet != null && wallet.maxInFlight() < 1)
+            throw new IllegalArgumentException("wallet.maxInFlight must be >= 1");
         for (NodeEntry a : nodes)
             for (NodeEntry b : nodes)
                 if (a.id() < b.id()) hmacKey(new NodeId(a.id()), new NodeId(b.id()));

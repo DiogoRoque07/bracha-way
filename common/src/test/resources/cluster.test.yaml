@@ -17,3 +17,4 @@ genesis:
 wallet:
   submitFanout: 2
   resendIntervalMs: 2000
+  maxInFlight: 4       # pipelined unconfirmed transfers (FIFO kept by seq)

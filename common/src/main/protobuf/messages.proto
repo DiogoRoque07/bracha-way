@@ -39,25 +39,24 @@ message Send  { TxRef id = 1; SignedTransfer tx = 2; }
 message Echo  { TxRef id = 1; SignedTransfer tx = 2; }
 message Ready { TxRef id = 1; SignedTransfer tx = 2; }
 
-// Unreliable path: sent once, never put in the resend buffer.
-message Heartbeat { uint64 counter = 1; }
-message Ack       { uint64 up_to = 1; }   // cumulative ACK of link_seq
+// Sent once, never put in the resend buffer.
+message Ack { uint64 up_to = 1; }   // cumulative ACK of link_seq
 
 message NodeMessage {
   oneof body {
     Send      send      = 1;
     Echo      echo      = 2;
     Ready     ready     = 3;
-    Heartbeat heartbeat = 4;
     Ack       ack       = 5;
   }
+  reserved 4;  // was Heartbeat: no failure detector in the base system
 }
 
 // What actually goes on the wire between nodes (length-delimited).
 message Frame {
   uint32 sender_id = 1;
-  uint64 epoch     = 2;              // incarnation; increases on every restart
-  uint64 link_seq  = 3;              // 0 for frames on the unreliable path
+  uint64 epoch     = 2;              // incarnation; always 0 in the base system (crash-recovery increment bumps it)
+  uint64 link_seq  = 3;              // 0 for Ack-only frames (not retransmitted)
   repeated NodeMessage msgs = 4;     // batching: several messages per frame
   bytes  hmac      = 5;              // HMAC-SHA256 (pair key) over this Frame serialized WITHOUT field 5
 }
@@ -72,45 +71,68 @@ message Hello {
 // ---------------------------------------------------------------------------
 // Client <-> node
 // ---------------------------------------------------------------------------
+// Versions (docs/STACK.md §3.2): next_seq = next[a], the number of a's own transfers applied (FIFO);
+// version = ver[a], the number of applied transfers touching a (debits + credits).
+
+message HistoryQuery {
+  bytes  account  = 1;
+  uint64 from_seq = 2;   // only a's own transfers with seq >= from_seq; credits are included in full
+}
 
 message ClientRequest {
   uint64 request_id = 1;
   oneof body {
-    SignedTransfer transfer    = 2;
-    TxRef          tx_status   = 3;
-    bytes          next_seq    = 4;  // account id
-    bytes          balance     = 5;  // account id
-    bytes          history     = 6;  // account id
-    bool           node_status = 7;
+    SignedTransfer transfer     = 2;
+    TxRef          tx_status    = 3;
+    bytes          account_view = 4;  // account id
+    HistoryQuery   history      = 5;
+    bool           node_status  = 6;
   }
 }
 
 enum TransferResult {
-  ACCEPTED        = 0;  // valid signature/format; broadcast in progress
-  ALREADY_APPLIED = 1;  // seq < next[src]
-  REJECTED        = 2;  // bad signature or malformed
+  ACCEPTED        = 0;  // valid signature/format; broadcast in progress (may be pending at this node)
+  ALREADY_APPLIED = 1;  // seq < next[src] and the SAME transfer was applied at that seq
+  STALE_SEQ       = 2;  // seq < next[src] and a DIFFERENT transfer was applied: the wallet is outdated
+  REJECTED        = 3;  // bad signature or malformed
+}
+
+message TransferReply {
+  TransferResult result   = 1;
+  uint64         next_seq = 2;       // this node's next[src]
+  SignedTransfer applied  = 3;       // set when result == STALE_SEQ
 }
 
 enum TxStatus {
-  UNKNOWN = 0;  // not seen/delivered here yet; NOT "failed"
-  PENDING = 1;  // delivered, waiting on earlier seq or on balance
+  UNKNOWN = 0;  // not delivered here yet; NOT "failed"
+  PENDING = 1;  // delivered, waiting on earlier seq (FIFO) or on balance
   APPLIED = 2;
 }
 
+message TxStatusReply {
+  TxStatus status   = 1;
+  uint64   next_seq = 2;
+}
+
+message AccountViewReply {
+  uint64 balance  = 1;
+  uint64 next_seq = 2;
+  uint64 version  = 3;
+}
+
 message HistoryReply { repeated SignedTransfer applied = 1; }
-message NodeStatus   { uint32 node_id = 1; repeated uint32 suspected = 2; }
+message NodeStatus   { uint32 node_id = 1; uint64 applied_count = 2; }
 
 message ClientResponseBody {
   uint64 request_id = 1;
   uint32 node_id    = 2;
   oneof body {
-    TransferResult transfer    = 3;
-    TxStatus       tx_status   = 4;
-    uint64         next_seq    = 5;
-    uint64         balance     = 6;
-    HistoryReply   history     = 7;
-    NodeStatus     node_status = 8;
-    string         error       = 9;
+    TransferReply    transfer     = 3;
+    TxStatusReply    tx_status    = 4;
+    AccountViewReply account_view = 5;
+    HistoryReply     history      = 6;
+    NodeStatus       node_status  = 7;
+    string           error        = 8;
   }
 }
 

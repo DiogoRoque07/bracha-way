@@ -16,8 +16,9 @@ import java.util.function.BiConsumer;
  * Bracha BRB per (src, seq). Owner: B. Runs on the node's single event-loop thread (no locks).
  *
  * <p>TODO: SEND → ECHO (once per id, first validly signed tx) → READY (echoToReady ECHOs or
- * readyAmplify READYs, once per id) → deliver (readyToDeliver READYs, once per id). WAL record +
- * flush before sending ECHO/READY; reload on start. GC on delivery / forget(). Byzantine modes.
+ * readyAmplify READYs, once per id) → deliver (readyToDeliver READYs, once per id). Runs for any
+ * seq: FIFO is the ledger's job. GC on delivery / forget(). Byzantine modes.
+ * Increment only: WAL record + flush before sending ECHO/READY; reload on start (base: BrbWal.NONE).
  */
 public final class BrachaBroadcast implements Broadcast {
     private final NodeId self;

@@ -7,7 +7,7 @@ import tfd.pay.proto.SignedTransfer;
 import java.nio.file.Path;
 import java.util.List;
 
-/** ECHO/READY write-ahead log with group commit (record buffers, flush fsyncs). Owner: C. */
+/** ECHO/READY write-ahead log with group commit (record buffers, flush fsyncs). Crash-recovery increment. */
 public final class FileBrbWal implements BrbWal {
     private final Path file;
 

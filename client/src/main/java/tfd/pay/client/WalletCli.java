@@ -13,11 +13,12 @@ import java.util.concurrent.Callable;
  *
  * <p>Submission: persist signed bytes + seq in keystore BEFORE sending; send to submitFanout nodes;
  * resend the SAME bytes every resendIntervalMs; confirm on f+1 matching APPLIED (TxStatus).
- * No failure detector.
+ * FIFO: up to maxInFlight pipelined transfers, confirmed in seq order. Ignore stale answers
+ * (versions: read-your-writes, monotonic reads). On STALE_SEQ, run sync. No failure detector.
  */
 @Command(name = "wallet", mixinStandardHelpOptions = true,
         subcommands = {WalletCli.Keygen.class, WalletCli.Transfer.class, WalletCli.Status.class,
-                WalletCli.Balance.class, WalletCli.History.class, WalletCli.NextSeq.class},
+                WalletCli.Balance.class, WalletCli.History.class, WalletCli.Sync.class},
         description = "Digital wallet for the bracha-way payment system.")
 public final class WalletCli {
 
@@ -60,7 +61,7 @@ public final class WalletCli {
         }
     }
 
-    @Command(name = "balance", description = "Balance of an account, as reported by the nodes.")
+    @Command(name = "balance", description = "Balance and versions of an account (f+1 matching, non-stale answers).")
     static class Balance implements Callable<Integer> {
         @CommandLine.Mixin Common common;
         @Parameters(index = "0", arity = "0..1", description = "Account (default: own).") String account;
@@ -80,8 +81,9 @@ public final class WalletCli {
         }
     }
 
-    @Command(name = "next-seq", description = "Recover next seq from f+1 matching nodes.")
-    static class NextSeq implements Callable<Integer> {
+    @Command(name = "sync", description = "Resynchronise an outdated wallet: next seq = (f+1)-th highest "
+            + "next[src] reported (Quorums.safeLowerBound); fetch own history; report superseded transfers.")
+    static class Sync implements Callable<Integer> {
         @CommandLine.Mixin Common common;
 
         public Integer call() {

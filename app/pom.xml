@@ -14,7 +14,6 @@
   <dependencies>
     <dependency><groupId>tfd.pay</groupId><artifactId>common</artifactId></dependency>
     <dependency><groupId>tfd.pay</groupId><artifactId>channel</artifactId></dependency>
-    <dependency><groupId>tfd.pay</groupId><artifactId>fd</artifactId></dependency>
     <dependency><groupId>tfd.pay</groupId><artifactId>broadcast</artifactId></dependency>
     <dependency><groupId>tfd.pay</groupId><artifactId>storage</artifactId></dependency>
     <dependency><groupId>info.picocli</groupId><artifactId>picocli</artifactId></dependency>

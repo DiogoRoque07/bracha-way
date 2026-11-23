@@ -13,7 +13,6 @@
   <modules>
     <module>common</module>
     <module>channel</module>
-    <module>fd</module>
     <module>broadcast</module>
     <module>storage</module>
     <module>app</module>
@@ -40,7 +39,6 @@
       <!-- internal modules -->
       <dependency><groupId>tfd.pay</groupId><artifactId>common</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>tfd.pay</groupId><artifactId>channel</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>tfd.pay</groupId><artifactId>fd</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>tfd.pay</groupId><artifactId>broadcast</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>tfd.pay</groupId><artifactId>storage</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>tfd.pay</groupId><artifactId>app</artifactId><version>${project.version}</version></dependency>

@@ -1,7 +1,8 @@
 # bracha-way
 
 A decentralised payment system with no consensus: client transfers are disseminated among `n ≥ 3f+1`
-replicas with **Bracha's Byzantine Reliable Broadcast**, one instance per `(src, seq)`.
+replicas with **Bracha's Byzantine Reliable Broadcast**, one instance per `(src, seq)`. Fully
+asynchronous: no failure detector, no timing assumptions.
 Project for *Tolerância a Faltas Distribuída* 2026/27 (FCUL).
 
 - **Design and stack:** [`docs/STACK.md`](docs/STACK.md)
@@ -13,11 +14,10 @@ Project for *Tolerância a Faltas Distribuída* 2026/27 (FCUL).
 |---|---|
 | `common` | `.proto` wire contract, crypto (Ed25519/HMAC/SHA-256), config, **all module interfaces** |
 | `channel` | Reliable authenticated node-to-node links (TCP + HMAC + epoch + ACK/resend/dedup) |
-| `fd` | Heartbeat ◇P failure detector (node-side, liveness only) |
 | `broadcast` | Bracha BRB per `(src, seq)`, Byzantine modes |
-| `storage` | Applied-transfer log + ECHO/READY write-ahead log |
-| `app` | Ledger (validation, pending, replication), client API, node main + event loop |
-| `client` | Wallet CLI + keystore |
+| `storage` | Applied-transfer log (+ ECHO/READY write-ahead log in the crash-recovery increment) |
+| `app` | Ledger (validation, FIFO, pending, versions, replication), client API, node main + event loop |
+| `client` | Wallet CLI + keystore + sync |
 | `testkit` | Deterministic simulated network and fault injection for tests |
 | `deploy/` | Docker Compose, config, keygen script |
 | `demo/` | Demo / fault-injection scripts |
